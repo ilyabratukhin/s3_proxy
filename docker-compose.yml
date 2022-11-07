@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  s3_proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: s3_proxy:0.0.1
+    env_file: .env
+    volumes:
+      - ".:/code"
+    working_dir: "/code"
+    ports:
+      - "${WEB_PORT:-8028}:8080"
+    command: "python server.py"

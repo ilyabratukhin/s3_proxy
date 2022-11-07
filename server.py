@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 async def serve_blob(
         request: web.Request,
 ) -> web.StreamResponse:
+    logger.info("start handle")
     env = request.match_info.get('env', None)
     filename = request.match_info.get('filename', None)
 
@@ -22,26 +23,26 @@ async def serve_blob(
     async with session.client("s3") as s3:
         logger.info(f"Serving {bucket_name} {blob_s3_key}")
         s3_ob = await s3.get_object(Bucket=bucket_name, Key=blob_s3_key)
-
         ob_info = s3_ob["ResponseMetadata"]["HTTPHeaders"]
         resp = web.StreamResponse(
             headers={
-                "CONTENT-DISPOSITION": (
-                    f"attachment; filename='{filename}'"
-                ),
                 "Content-Type": ob_info["content-type"],
             }
         )
+        logger.info(str(ob_info))
         resp.content_type = ob_info["content-type"]
         resp.content_length = ob_info["content-length"]
         await resp.prepare(request)
-
-        async with s3_ob["Body"] as stream:
+        stream = s3_ob["Body"]
+        try:
             file_data = await stream.read(chunk_size)
             while file_data:
+                logger.info("write data")
                 await resp.write(file_data)
+                logger.info("read data from stream")
                 file_data = await stream.read(chunk_size)
-
+        finally:
+            stream.close()
     return resp
 
 

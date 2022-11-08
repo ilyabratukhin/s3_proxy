@@ -26,7 +26,7 @@ async def serve_blob(
             s3_ob = await s3.get_object(Bucket=bucket_name, Key=blob_s3_key)
         except Exception as e:
             logger.error(e)
-            return web.Response(status=404)
+            return web.Response(status=404, text="Image not found")
         ob_info = s3_ob["ResponseMetadata"]["HTTPHeaders"]
         resp = web.StreamResponse(
             headers={

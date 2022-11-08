@@ -22,7 +22,11 @@ async def serve_blob(
     session = aioboto3.Session()
     async with session.client("s3") as s3:
         logger.info(f"Serving {bucket_name} {blob_s3_key}")
-        s3_ob = await s3.get_object(Bucket=bucket_name, Key=blob_s3_key)
+        try:
+            s3_ob = await s3.get_object(Bucket=bucket_name, Key=blob_s3_key)
+        except Exception as e:
+            logger.error(e)
+            return web.Response(status=404)
         ob_info = s3_ob["ResponseMetadata"]["HTTPHeaders"]
         resp = web.StreamResponse(
             headers={
@@ -37,9 +41,9 @@ async def serve_blob(
         try:
             file_data = await stream.read(chunk_size)
             while file_data:
-                logger.info("write data")
+                logger.debug("write data")
                 await resp.write(file_data)
-                logger.info("read data from stream")
+                logger.debug("read data from stream")
                 file_data = await stream.read(chunk_size)
         finally:
             stream.close()

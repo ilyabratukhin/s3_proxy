@@ -51,7 +51,7 @@ async def serve_blob(
 
 app = web.Application()
 app.add_routes([
-    web.get('/{filename}', serve_blob)
+    web.get('/{filename:.*}', serve_blob)
 ])
 
 if __name__ == '__main__':

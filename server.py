@@ -11,13 +11,12 @@ async def serve_blob(
         request: web.Request,
 ) -> web.StreamResponse:
     logger.info("start handle")
-    env = request.match_info.get('env', None)
     filename = request.match_info.get('filename', None)
 
     bucket_name = os.getenv("BUCKET_NAME")
     chunk_size = int(os.getenv("CHUNK_SIZE", 69 * 1024))
 
-    blob_s3_key = f"{env}/{filename}"
+    blob_s3_key = f"{filename}"
 
     session = aioboto3.Session()
     async with session.client("s3") as s3:
@@ -52,7 +51,7 @@ async def serve_blob(
 
 app = web.Application()
 app.add_routes([
-    web.get('/{env}/{filename}', serve_blob)
+    web.get('/{filename}', serve_blob)
 ])
 
 if __name__ == '__main__':
